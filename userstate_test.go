@@ -3,6 +3,7 @@ package permissions
 import (
 	"github.com/xyproto/pinterface"
 	"testing"
+	"time"
 )
 
 func TestPerm(t *testing.T) {
@@ -209,5 +210,34 @@ func TestChangePassword(t *testing.T) {
 		t.Error("Error, password is incorrect: should not be hunter2!")
 	}
 
+	userstate.RemoveUser("bob")
+}
+
+func TestTokens(t *testing.T) {
+	userstate := NewUserStateSimple()
+
+	// Add bob
+	userstate.AddUser("bob", "hunter1", "bob@zombo.com")
+	if !userstate.HasUser("bob") {
+		t.Error("Error, user bob should exist")
+	}
+
+	// Set a token that will expire in 2 seconds
+	userstate.SetToken("bob", "asdf123", time.Second*2)
+
+	// Check that the token is "asdf123"
+	if userstate.GetToken("bob") != "asdf123" {
+		t.Error("Error, token is incorrect: should be asdf123!")
+	}
+
+	// Wait 2 seconds
+	time.Sleep(time.Second * 2)
+
+	// Check that the token is now gone
+	if userstate.GetToken("bob") != "" {
+		t.Error("Error, token is incorrect: should be gone!")
+	}
+
+	// Remove bob
 	userstate.RemoveUser("bob")
 }
